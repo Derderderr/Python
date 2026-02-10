@@ -4,7 +4,7 @@ from time import sleep
 
 def guessing_game(GUESS_RANGE, GUESS_LIMIT):
     # Set the initial values.
-    RANDOM = randint(1, GUESS_RANGE)
+    ANSWER = randint(1, GUESS_RANGE)
     GUESS = int(input("What is your guess? "))
     ATTEMPTS_ALLOWED = GUESS_LIMIT
     done = False
@@ -16,29 +16,31 @@ def guessing_game(GUESS_RANGE, GUESS_LIMIT):
     while GUESS_LIMIT > 0 and not done:
         GUESS_LIMIT -= 1  # Take one guess = lose one chance
         if GUESS_LIMIT > 0:
-            if GUESS < RANDOM:
+            if GUESS < ANSWER:
                 print(f"It should be higher than {GUESS}.")
-            elif GUESS > RANDOM:
+            elif GUESS > ANSWER:
                 print(f"It should be lower than {GUESS}.")
             else:
                 ATTEMPTS_TOOK = ATTEMPTS_ALLOWED - GUESS_LIMIT
                 print(f"You nailed it! And it only took you {ATTEMPTS_TOOK} attempts.")
                 done = True
+                try_again()
             if GUESS_LIMIT > 0 and not done:
                 print(f"You still have {GUESS_LIMIT} chances left.\n")
                 GUESS = int(input("Try a new guess: "))
                 # Another input validation loop.
                 GUESS = InputValidation(GUESS, GUESS_RANGE)
         elif GUESS_LIMIT == 0 and not done:  # Last chance to guess
-            if GUESS == RANDOM:
+            if GUESS == ANSWER:
                 print(
                     f"You nailed it! However, it took you all the {ATTEMPTS_ALLOWED} attempts."
                 )
             else:
                 print(
                     f"GAME OVER! It took you more than {ATTEMPTS_ALLOWED} attempts. "
-                    f"The correct number is {RANDOM}."
+                    f"The correct number is {ANSWER}."
                 )
+            try_again()
 
 
 def InputValidation(GUESS, GUESS_RANGE):
@@ -67,7 +69,7 @@ def try_again():
     print()
     again = input("Do you want to play again? (yes/no) ")
     if again.lower() in ["y", "yes"]:
-        welcome()
+        choose_level()
     elif again.lower() in ["n", "no"]:
         print("Thanks for playing the game")
     else:
@@ -81,6 +83,9 @@ def welcome():
     sleep(1)
 
     print(f"Okay, {name}. Let's Begin The Guessing Game!")
+    choose_level()
+
+def choose_level():
     print(
         "Choose a level:",
         "1. Easy",
@@ -94,16 +99,13 @@ def welcome():
     sleep(1)
     if level == 1:
         easy()
-        try_again()
     elif level == 2:
         medium()
-        try_again()
     elif level == 3:
         hard()
-        try_again()
     else:
         print("INVALID VALUE! Please try again.\n")
-        welcome()
+        choose_level()
 
 
 welcome()
