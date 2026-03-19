@@ -1,30 +1,28 @@
-import string as str
+import string
 import secrets
 
-
 class PasswordGenerator:
-    @staticmethod
-    def gen_sequence(
-        conditions,
-    ):  # must have  conditions (in a list format), for each member of the list possible_characters
-        possible_characters = [
-            str.ascii_lowercase,
-            str.ascii_uppercase,
-            str.digits,
-            str.punctuation,
-        ]
-        sequence = ""
-        for x in range(len(conditions)):
-            if conditions[x]:
-                sequence += possible_characters[x]
-            else:
-                pass
+    CHAR_POOLS = {
+        "lowercase": string.ascii_lowercase,
+        "uppercase": string.ascii_uppercase,
+        "digits": string.digits,
+        "punctuation": string.punctuation,
+    }
+
+    @classmethod
+    def build_sequence(cls, conditions: dict) -> str:
+        sequence = "".join(
+            chars for key, chars in cls.CHAR_POOLS.items() if conditions.get(key, False)
+        )
+
+        if not sequence:
+            raise ValueError("At least one character set must be enabled.")
+
         return sequence
 
     @staticmethod
-    def gen_password(sequence, passlength=8):
-        password = "".join((secrets.choice(sequence) for i in range(passlength)))
-        return password
+    def generate(sequence: str, length: int = 8) -> str:
+        return "".join(secrets.choice(sequence) for _ in range(length))
 
 
 class Interface:
@@ -36,59 +34,57 @@ class Interface:
     }
 
     @classmethod
-    def change_has_characters(cls, change):
-        try:
-            cls.has_characters[
-                change
-            ]  # to check if the specified key exists in the dicitonary
-        except Exception as err:
-            print(f"Invalid \nan Exception: {err}")
-        else:
-            cls.has_characters[change] = not cls.has_characters[
-                change
-            ]  # automaticly changres to the oppesite value already there
-            print(f"{change} is now set to {cls.has_characters[change]}")
+    def toggle(cls, key: str):
+        if key not in cls.has_characters:
+            print("Invalid option.")
+            return
+
+        cls.has_characters[key] = not cls.has_characters[key]
+        print(f"{key} → {cls.has_characters[key]}")
 
     @classmethod
-    def show_has_characters(cls):
-        print(cls.has_characters)  # print the output
+    def show(cls):
+        for k, v in cls.has_characters.items():
+            print(f"{k}: {v}")
 
-    def generate_password(self, lenght):
-        sequence = PasswordGenerator.gen_sequence(list(self.has_characters.values()))
-        print(PasswordGenerator.gen_password(sequence, lenght))
-
-
-def list_to_vertical_string(list):
-    to_return = ""
-    for member in list:
-        to_return += f"{member}\n"
-    return to_return
-
-
-class Run:
-    def decide_operation(self):
-        user_input = input(": ")
+    def generate_password(self, length: int):
         try:
-            int(user_input)
-        except:
-            Interface.change_has_characters(user_input)
-        else:
+            sequence = PasswordGenerator.build_sequence(self.has_characters)
+            password = PasswordGenerator.generate(sequence, length)
+            print(f"\nGenerated: {password}")
+        except ValueError as e:
+            print(f"Error: {e}")
+
+
+def format_menu(options):
+    return "\n".join(options)
+
+
+class App:
+    def handle_input(self, user_input: str):
+        if user_input.isdigit():
             Interface().generate_password(int(user_input))
-        finally:
-            print("\n\n")
+        else:
+            Interface.toggle(user_input)
+
+        print("\n")
 
     def run(self):
-        menu = f"""Welcome to the PassGen App!
-Commands:
-    generate password ->
-    <lenght of the password>
+        menu = f"""Welcome to PassGen
+Enter a number → generate password
 
-commands to change the characters to be used to generate passwords:
-{list_to_vertical_string(Interface.has_characters.keys())}
-            """
+Toggle character sets:
+{format_menu(Interface.has_characters.keys())}
+        """
+
         print(menu)
+
         while True:
-            self.decide_operation()
+            user_input = input("> ").strip()
+            self.handle_input(user_input)
 
 
-Run().run()
+
+
+if __name__ == "__main__":
+    App().run()
